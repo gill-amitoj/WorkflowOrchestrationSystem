@@ -56,9 +56,40 @@
 
         <!-- Actions Section -->
         <div class="section">
-            <h2><span>🧪</span> Try It Out</h2>
-            <button class="btn" onclick="createDemoWorkflow()">Create Demo Workflow</button>
-            <button class="btn secondary" onclick="runWorkflow()">Run Latest Workflow</button>
+            <h2><span>🧪</span> Try It Out - Pick a Demo</h2>
+            
+            <div class="demo-grid">
+                <button class="demo-btn" onclick="createAndRunWorkflow('joke')">
+                    <span class="demo-icon">🎭</span>
+                    <span class="demo-title">Random Joke</span>
+                    <span class="demo-desc">1 step - Fetches a joke</span>
+                </button>
+                
+                <button class="demo-btn" onclick="createAndRunWorkflow('user')">
+                    <span class="demo-icon">👤</span>
+                    <span class="demo-title">Get User</span>
+                    <span class="demo-desc">1 step - Fetches user data</span>
+                </button>
+                
+                <button class="demo-btn" onclick="createAndRunWorkflow('cat')">
+                    <span class="demo-icon">🐱</span>
+                    <span class="demo-title">Cat Fact</span>
+                    <span class="demo-desc">1 step - Random cat fact</span>
+                </button>
+                
+                <button class="demo-btn" onclick="createAndRunWorkflow('todo')">
+                    <span class="demo-icon">📝</span>
+                    <span class="demo-title">Get Todo</span>
+                    <span class="demo-desc">1 step - Fetches a todo</span>
+                </button>
+            </div>
+            
+            <button class="demo-btn multi-step" onclick="createAndRunWorkflow('multi')">
+                <span class="demo-icon">⚡</span>
+                <span class="demo-title">MULTI-STEP WORKFLOW</span>
+                <span class="demo-desc">3 steps - Joke → User → Combine (Shows data chaining!)</span>
+            </button>
+            
             <div id="output-area"></div>
         </div>
     </div>

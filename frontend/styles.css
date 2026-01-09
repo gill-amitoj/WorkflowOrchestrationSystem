@@ -314,3 +314,68 @@ h1 {
         grid-template-columns: 1fr;
     }
 }
+
+/* Demo Button Grid */
+.demo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.demo-btn {
+    background: rgba(0,0,0,0.3);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+}
+
+.demo-btn:hover {
+    border-color: #00d9ff;
+    background: rgba(0,217,255,0.1);
+    transform: translateY(-2px);
+}
+
+.demo-btn:active {
+    transform: translateY(0);
+}
+
+.demo-icon {
+    font-size: 2.5rem;
+}
+
+.demo-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.demo-desc {
+    font-size: 0.8rem;
+    color: #888;
+    text-align: center;
+}
+
+.demo-btn.multi-step {
+    width: 100%;
+    border-color: #00ff88;
+    background: rgba(0,255,136,0.1);
+    margin-top: 5px;
+}
+
+.demo-btn.multi-step:hover {
+    border-color: #00ff88;
+    background: rgba(0,255,136,0.2);
+    box-shadow: 0 0 20px rgba(0,255,136,0.3);
+}
+
+.demo-btn.multi-step .demo-title {
+    color: #00ff88;
+}
+

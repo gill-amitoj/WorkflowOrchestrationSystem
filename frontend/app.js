@@ -264,6 +264,182 @@ function sleep(ms) {
 }
 
 /**
+ * Workflow configurations for different demo types
+ */
+const WORKFLOW_CONFIGS = {
+    joke: {
+        name: 'joke-workflow',
+        description: 'Fetches a random joke from the internet',
+        steps: [
+            {
+                name: 'fetch_joke',
+                task_type: 'http_request',
+                config: {
+                    url: 'https://official-joke-api.appspot.com/random_joke',
+                    method: 'GET'
+                }
+            }
+        ]
+    },
+    user: {
+        name: 'user-workflow',
+        description: 'Fetches fake user data',
+        steps: [
+            {
+                name: 'fetch_user',
+                task_type: 'http_request',
+                config: {
+                    url: 'https://jsonplaceholder.typicode.com/users/1',
+                    method: 'GET'
+                }
+            }
+        ]
+    },
+    cat: {
+        name: 'cat-fact-workflow',
+        description: 'Fetches a random cat fact',
+        steps: [
+            {
+                name: 'fetch_cat_fact',
+                task_type: 'http_request',
+                config: {
+                    url: 'https://catfact.ninja/fact',
+                    method: 'GET'
+                }
+            }
+        ]
+    },
+    todo: {
+        name: 'todo-workflow',
+        description: 'Fetches a todo item',
+        steps: [
+            {
+                name: 'fetch_todo',
+                task_type: 'http_request',
+                config: {
+                    url: 'https://jsonplaceholder.typicode.com/todos/1',
+                    method: 'GET'
+                }
+            }
+        ]
+    },
+    multi: {
+        name: 'multi-step-workflow',
+        description: 'Multi-step: Fetches joke, user, and combines them',
+        steps: [
+            {
+                name: 'step1_fetch_joke',
+                task_type: 'http_request',
+                config: {
+                    url: 'https://official-joke-api.appspot.com/random_joke',
+                    method: 'GET'
+                }
+            },
+            {
+                name: 'step2_fetch_user',
+                task_type: 'http_request',
+                config: {
+                    url: 'https://jsonplaceholder.typicode.com/users/1',
+                    method: 'GET'
+                }
+            },
+            {
+                name: 'step3_fetch_post',
+                task_type: 'http_request',
+                config: {
+                    url: 'https://jsonplaceholder.typicode.com/posts/1',
+                    method: 'GET'
+                }
+            }
+        ]
+    }
+};
+
+/**
+ * Creates and runs a workflow of the specified type
+ * @param {string} type - Type of workflow (joke, user, cat, todo, multi)
+ */
+async function createAndRunWorkflow(type) {
+    const output = elements.outputArea;
+    const config = WORKFLOW_CONFIGS[type];
+    
+    if (!config) {
+        output.innerHTML = '<div class="output-box error">Unknown workflow type!</div>';
+        return;
+    }
+    
+    const workflowName = `${config.name}-${Date.now()}`;
+    
+    output.innerHTML = `<div class="output-box">🚀 Creating ${config.name}...\n\nSteps: ${config.steps.length}</div>`;
+    
+    try {
+        // Step 1: Create workflow
+        const workflow = await apiRequest('/api/v1/workflows', {
+            method: 'POST',
+            body: JSON.stringify({ 
+                name: workflowName, 
+                description: config.description 
+            })
+        });
+        
+        output.innerHTML = `<div class="output-box">✓ Created workflow: ${workflowName}\n\nAdding steps...</div>`;
+        
+        // Step 2: Add all steps
+        for (let i = 0; i < config.steps.length; i++) {
+            const step = config.steps[i];
+            await apiRequest(`/api/v1/workflows/${workflow.id}/steps`, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    name: step.name, 
+                    task_type: step.task_type, 
+                    step_order: i,
+                    config: step.config
+                })
+            });
+            output.innerHTML = `<div class="output-box">✓ Created workflow: ${workflowName}\n✓ Added step ${i+1}/${config.steps.length}: ${step.name}\n\n${i < config.steps.length - 1 ? 'Adding more steps...' : 'Activating...'}</div>`;
+        }
+        
+        // Step 3: Activate workflow
+        await apiRequest(`/api/v1/workflows/${workflow.id}/activate`, {
+            method: 'POST'
+        });
+        
+        output.innerHTML = `<div class="output-box">✓ Created workflow: ${workflowName}\n✓ Added ${config.steps.length} step(s)\n✓ Activated!\n\n⏳ Executing workflow...</div>`;
+        
+        // Step 4: Execute workflow
+        const execution = await apiRequest('/api/v1/executions', {
+            method: 'POST',
+            body: JSON.stringify({ 
+                workflow_id: workflow.id, 
+                idempotency_key: 'run-' + Date.now() 
+            })
+        });
+        
+        // Step 5: Poll for completion
+        let result = execution;
+        for (let i = 0; i < 15; i++) {
+            await sleep(1000);
+            result = await apiRequest(`/api/v1/executions/${execution.id}`);
+            
+            if (result.status === 'completed' || result.status === 'failed') {
+                break;
+            }
+            
+            output.innerHTML = `<div class="output-box">✓ Created workflow: ${workflowName}\n✓ Added ${config.steps.length} step(s)\n✓ Activated!\n\n⏳ Running... (${i+1}s)</div>`;
+        }
+        
+        // Step 6: Show result
+        const statusEmoji = result.status === 'completed' ? '✅' : '❌';
+        output.innerHTML = `<div class="output-box">${statusEmoji} Workflow: ${workflowName}\n${statusEmoji} Status: ${result.status.toUpperCase()}\n\n📦 Output:\n${JSON.stringify(result.output_data, null, 2)}</div>`;
+        
+        // Refresh the dashboard
+        await loadData();
+    } catch (error) {
+        output.innerHTML = `<div class="output-box error">❌ Error: ${error.message}</div>`;
+    }
+}
+
+/**
  * Initialize the dashboard
  */
 function init() {
@@ -276,6 +452,7 @@ function init() {
     // Expose functions globally for button onclick handlers
     window.createDemoWorkflow = createDemoWorkflow;
     window.runWorkflow = runWorkflow;
+    window.createAndRunWorkflow = createAndRunWorkflow;
     window.loadData = loadData;
 }
 
